@@ -1,0 +1,31 @@
+security:
+    role_hierarchy:
+        ROLE_ADMIN:       [ROLE_USER]
+        ROLE_SUPER_ADMIN: [ROLE_ADMIN]
+
+    providers:
+        yuser_provider:
+            entity:
+                class: Youshido\SecurityUserBundle\Entity\User
+                property: email
+
+    encoders:
+        Youshido\SecurityUserBundle\Entity\User: md5
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt|error)|css|images|js)/
+            security: false
+
+        default:
+            pattern: ^/
+            provider: yuser_provider
+            anonymous: ~
+            form_login:
+                login_path: security.login
+                check_path:  security.login_check
+                success_handler: security.authentication_handler
+                failure_handler: security.authentication_handler
+            logout:
+                path:   security.logout
+                target: /

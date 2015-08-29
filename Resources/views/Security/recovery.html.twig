@@ -1,0 +1,16 @@
+{% extends '::base.html.twig' %}
+
+{% block body %}
+
+    {% if error %}
+        {{ error }}
+    {% endif %}
+
+    {{ form_start(form) }}
+        {{ form_rest(form) }}
+
+        <button type="submit">Register</button>
+
+    {{ form_end(form) }}
+
+{% endblock %}

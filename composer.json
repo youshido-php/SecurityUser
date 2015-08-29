@@ -1,0 +1,23 @@
+{
+  "name": "youshido/security-user",
+  "type": "symfony-bundle",
+  "description": "Bundle for easy integrations security user",
+  "keywords": ["user", "security user", "symfony", "bundle"],
+  "homepage": "https://github.com/Youshido/SecurityUser",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Portey Vasil",
+      "email": "portey@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.4",
+    "symfony/framework-bundle": "~2.3",
+    "doctrine/doctrine-bundle": "~1.3",
+    "symfony/form": "~2.3"
+  },
+  "autoload": {
+    "psr-4": { "Youshido\\SecurityUserBundle\\": "" }
+  }
+}

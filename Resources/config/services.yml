@@ -1,0 +1,5 @@
+services:
+    security.authentication_handler:
+        class: Youshido\SecurityUserBundle\Service\AuthenticationHandler
+        public: false
+        arguments: [@router, @session]

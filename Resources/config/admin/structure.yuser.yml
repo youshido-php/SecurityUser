@@ -1,0 +1,29 @@
+modules:
+
+    yuser:
+        title: Users
+        type: dictionary
+        icon: imoon imoon-user
+        entity: Youshido\SecurityUserBundle\Entity\User
+        columns: 
+            id:
+                type: integer
+            firstName:
+                type: text
+            lastName:
+                type: text
+            email:
+                type: text
+            active:
+                type: boolean
+                required: false
+            password:
+                type: text
+            createdAt:
+                type: datetime
+            updatedAt:
+                type: datetime
+        actions:
+            default:
+              show: [firstName, lastName, email, active]
+            remove: ~
