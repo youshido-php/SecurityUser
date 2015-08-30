@@ -9,20 +9,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 /**
  * User
  *
- * @ORM\Table(name="y_user")
- * @ORM\Entity(repositoryClass="Youshido\SecurityUserBundle\Entity\Repository\UserRepository")
  * @ORM\HasLifecycleCallbacks()
+ * @ORM\MappedSuperclass(repositoryClass="Youshido\SecurityUserBundle\Entity\Repository\SecuredUserRepository")
  */
-class User implements \Serializable, AdvancedUserInterface
+class SecuredUser implements \Serializable, AdvancedUserInterface
 {
-    /**
-     * @var integer
-     *
-     * @ORM\Column(name="id", type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private $id;
 
     /**
      * @var string
@@ -90,7 +81,7 @@ class User implements \Serializable, AdvancedUserInterface
      * Set firstName
      *
      * @param string $firstName
-     * @return User
+     * @return SecuredUser
      */
     public function setFirstName($firstName)
     {
@@ -113,7 +104,7 @@ class User implements \Serializable, AdvancedUserInterface
      * Set lastName
      *
      * @param string $lastName
-     * @return User
+     * @return SecuredUser
      */
     public function setLastName($lastName)
     {
@@ -136,7 +127,7 @@ class User implements \Serializable, AdvancedUserInterface
      * Set email
      *
      * @param string $email
-     * @return User
+     * @return SecuredUser
      */
     public function setEmail($email)
     {
@@ -159,7 +150,7 @@ class User implements \Serializable, AdvancedUserInterface
      * Set active
      *
      * @param boolean $active
-     * @return User
+     * @return SecuredUser
      */
     public function setActive($active)
     {
@@ -182,7 +173,7 @@ class User implements \Serializable, AdvancedUserInterface
      * Set password
      *
      * @param string $password
-     * @return User
+     * @return SecuredUser
      */
     public function setPassword($password)
     {
@@ -205,7 +196,7 @@ class User implements \Serializable, AdvancedUserInterface
      * Set createdAt
      *
      * @param \DateTime $createdAt
-     * @return User
+     * @return SecuredUser
      */
     public function setCreatedAt($createdAt)
     {
@@ -228,7 +219,7 @@ class User implements \Serializable, AdvancedUserInterface
      * Set updatedAt
      *
      * @param \DateTime $updatedAt
-     * @return User
+     * @return SecuredUser
      */
     public function setUpdatedAt($updatedAt)
     {

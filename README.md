@@ -7,18 +7,82 @@
 
 > new new Youshido\SecurityUserBundle\YoushidoSecurityUserBundle(),
 
+### Create your User class:
+``` php
+<?php
 
-### Insert to your security.yml file 
+namespace AppBundle\Entity;
+
+use Doctrine\ORM\Mapping as ORM;
+use Youshido\SecurityUserBundle\Entity\SecuredUser;
+
+/**
+ * User
+ *
+ * @ORM\Table(name="user")
+ * @ORM\Entity
+ */
+class User extends SecuredUser
+{
+    /**
+     * @var integer
+     *
+     * @ORM\Column(name="id", type="integer")
+     * @ORM\Id
+     * @ORM\GeneratedValue(strategy="AUTO")
+     */
+    private $id;
+
+    //your custom fields
+
+```
+
+#### Create User form (if needed):
+``` php
+<?php
+
+namespace AppBundle\Form\Type;
+
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+use Youshido\SecurityUserBundle\Form\Type\SecuredUserType;
+
+class UserType extends SecuredUserType
+{
+
+    public function buildForm(FormBuilderInterface $builder, array $options)
+    {
+        parent::buildForm($builder, $options);
+    
+        $builder
+            ->add('plan', 'entity', [
+                'class' => 'AppBundle\Entity\Plan'
+            ])
+            ->add('terms', 'checkbox', [
+                'mapped' => false,
+            ])
+        ;
+    }
+
+    public function configureOptions(OptionsResolver $resolver)
+    {
+        $resolver->setDefaults([
+            'data_class' => 'AppBundle\Entity\User'
+        ]);
+    }
+```
+
+### Insert to your security.yml file:
 ``` yaml
 
 providers:
     yuser_provider:
         entity:
-            class: Youshido\SecurityUserBundle\Entity\User
+            class: /* your user class */
             property: email
 
 encoders:
-    Youshido\SecurityUserBundle\Entity\User: md5
+    /* your user class */: md5
 
 firewalls:
     dev:
@@ -38,80 +102,17 @@ firewalls:
             path:   security.logout
             target: /
 ```
-### Your can override base User class:
-#### Custom User class:
-``` php
-<?php
 
-namespace AppBundle\Entity;
-
-use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Asserts;
-use Youshido\SecurityUserBundle\Model\UserInterface;
-
-/**
- * User
- *
- * @ORM\Table(name="user")
- * @ORM\Entity
- */
-class User implements UserInterface
-{
-    /**
-     * @var integer
-     *
-     * @ORM\Column(name="id", type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
-     */
-    private $id;
-
-    //your custom fields
-
-    /**
-     * @var \Youshido\SecurityUserBundle\Entity\User
-     *
-     * @Asserts\NotBlank()
-     * @ORM\OneToOne(targetEntity="Youshido\SecurityUserBundle\Entity\User")
-     */
-    private $securityUser;
-```
-#### Custom User form:
-``` php
-<?php
-
-namespace AppBundle\Form\Type;
-
-use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\OptionsResolver\OptionsResolver;
-
-class UserType extends AbstractType
-{
-
-    public function buildForm(FormBuilderInterface $builder, array $options)
-    {
-        $builder
-            ->add('securityUser', new \Youshido\SecurityUserBundle\Form\Type\UserType())
-            ->add('plan', 'entity', [
-                'class' => 'AppBundle\Entity\Plan'
-            ])
-            ->add('terms', 'checkbox', [
-                'mapped' => false,
-            ])
-        ;
-    }
-
-    public function configureOptions(OptionsResolver $resolver)
-    {
-        $resolver->setDefaults([
-            'data_class' => 'AppBundle\Entity\User'
-        ]);
-    }
-```
-### Configure plugin
+### Configure plugin (required!):
 ``` yaml
 youshido_security_user:
+    model: /* your user class */
+```    
+
+### Available config options:
+``` yaml
+youshido_security_user:
+    model: /* your user class */
     templates:
         login_form: @YoushidoSecurityUser/Security/login.html.twig
         register_form: @YoushidoSecurityUser/Security/register.html.twig
@@ -126,6 +127,4 @@ youshido_security_user:
         register_success: homepage
     form:
         registration: AppBundle\Form\Type\UserType
-    model:
-        registration: AppBundle\Entity\User
 ```

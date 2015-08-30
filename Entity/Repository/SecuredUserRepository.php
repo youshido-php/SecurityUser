@@ -10,7 +10,7 @@ namespace Youshido\SecurityUserBundle\Entity\Repository;
 
 use Doctrine\ORM\EntityRepository;
 
-class UserRepository extends EntityRepository
+class SecuredUserRepository extends EntityRepository
 {
 
     public function findByEmail($email)

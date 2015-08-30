@@ -6,11 +6,11 @@ security:
     providers:
         yuser_provider:
             entity:
-                class: Youshido\SecurityUserBundle\Entity\User
+                class: /* your class */
                 property: email
 
     encoders:
-        Youshido\SecurityUserBundle\Entity\User: md5
+        /* your class */: md5
 
     firewalls:
         dev:

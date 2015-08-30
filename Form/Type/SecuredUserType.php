@@ -12,7 +12,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class UserType extends AbstractType
+class SecuredUserType extends AbstractType
 {
 
     public function buildForm(FormBuilderInterface $builder, array $options)
@@ -30,17 +30,8 @@ class UserType extends AbstractType
             ]);
     }
 
-    public function configureOptions(OptionsResolver $resolver)
-    {
-        $resolver
-            ->setDefaults([
-                'data_class' => 'Youshido\SecurityUserBundle\Entity\User'
-            ]);
-    }
-
-
     public function getName()
     {
-        return 'yuser_user_type';
+        return 'yuser_secured_user_type';
     }
 }

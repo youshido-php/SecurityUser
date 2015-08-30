@@ -42,13 +42,12 @@ class Configuration implements ConfigurationInterface
                 ->end()
                 ->arrayNode('form')
                     ->children()
-                        ->scalarNode('registration')->defaultValue('Youshido\SecurityUserBundle\Form\Type\UserType')->end()
+                        ->scalarNode('registration')->defaultValue('Youshido\SecurityUserBundle\Form\Type\SecuredUserType')->end()
                     ->end()
                 ->end()
-                ->arrayNode('model')
-                    ->children()
-                        ->scalarNode('registration')->defaultValue('Youshido\SecurityUserBundle\Entity\User')->end()
-                    ->end()
+                ->scalarNode('model')
+                    ->isRequired()
+                    ->cannotBeEmpty()
                 ->end()
             ->end();
 

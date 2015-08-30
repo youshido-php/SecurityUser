@@ -11,10 +11,9 @@ namespace Youshido\SecurityUserBundle\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use Youshido\SecurityUserBundle\Entity\User;
+use Youshido\SecurityUserBundle\Entity\SecuredUser;
 use Youshido\SecurityUserBundle\Form\Type\ChangePasswordType;
 use Youshido\SecurityUserBundle\Form\Type\RecoveryType;
-use Youshido\SecurityUserBundle\Model\UserInterface;
 
 class SecurityController extends Controller
 {
@@ -76,7 +75,7 @@ class SecurityController extends Controller
             $data = $form->getData();
             $email = $data['email'];
 
-            $user = $this->getDoctrine()->getRepository('YoushidoSecurityUserBundle:User')
+            $user = $this->getDoctrine()->getRepository('YoushidoSecurityUserBundle:SecuredUser')
                 ->findByEmail($email);
 
             if ($user && method_exists($user, 'getApproved') && $user->getApproved()) {
@@ -97,7 +96,7 @@ class SecurityController extends Controller
     }
 
     /**
-     * @param $user User
+     * @param $user SecuredUser
      * @return string
      */
     private function generateRecoveryUrl($user)
@@ -127,7 +126,7 @@ class SecurityController extends Controller
      */
     public function recoveryRedirectAction(Request $request, $id, $secret)
     {
-        $user = $this->getDoctrine()->getRepository('AppBundle:User')
+        $user = $this->getDoctrine()->getRepository('YoushidoSecurityUserBundle:SecuredUser')
             ->find($id);
 
         if ($user) {
@@ -168,11 +167,11 @@ class SecurityController extends Controller
      * @param $password
      * @return string
      */
-    private function generatePassword(UserInterface $user, $password)
+    private function generatePassword(SecuredUser $user, $password)
     {
         $encoder = $this->container->get('security.password_encoder');
 
-        return $encoder->encodePassword($user->getUser(), $password);
+        return $encoder->encodePassword($user, $password);
     }
 
     /**
@@ -183,8 +182,8 @@ class SecurityController extends Controller
      */
     public function registerAction(Request $request)
     {
-        /** @var UserInterface $user */
-        $modelClass = $this->getParameter('youshido_security_user.model.registration');
+        /** @var SecuredUser $user */
+        $modelClass = $this->getParameter('youshido_security_user.model');
         $user = new $modelClass;
 
         $typeClass = $this->getParameter('youshido_security_user.form.registration');
@@ -197,12 +196,11 @@ class SecurityController extends Controller
         $form->handleRequest($request);
 
         if ($form->isValid()) {
-            $encoded = $this->generatePassword($user, $user->getUser()->getPassword());
+            $encoded = $this->generatePassword($user, $user->getPassword());
 
-            $user->getUser()->setPassword($encoded);
+            $user->setPassword($encoded);
 
             $this->getDoctrine()->getManager()->persist($user);
-            $this->getDoctrine()->getManager()->persist($user->getUser());
             $this->getDoctrine()->getManager()->flush();
 
             return $this->redirectToRoute($this->getParameter('youshido_security_user.redirects.register_success'));
