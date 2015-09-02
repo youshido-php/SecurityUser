@@ -5,12 +5,14 @@ namespace Youshido\SecurityUserBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\AdvancedUserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
  * User
  *
  * @ORM\HasLifecycleCallbacks()
  * @ORM\MappedSuperclass(repositoryClass="Youshido\SecurityUserBundle\Entity\Repository\SecuredUserRepository")
+ * @UniqueEntity("email")
  */
 class SecuredUser implements \Serializable, AdvancedUserInterface
 {

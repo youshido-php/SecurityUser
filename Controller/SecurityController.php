@@ -9,8 +9,10 @@ namespace Youshido\SecurityUserBundle\Controller;
 
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\ConstraintViolation;
 use Youshido\SecurityUserBundle\Entity\SecuredUser;
 use Youshido\SecurityUserBundle\Form\Type\ChangePasswordType;
 use Youshido\SecurityUserBundle\Form\Type\RecoveryType;
@@ -203,6 +205,8 @@ class SecurityController extends Controller
             $this->getDoctrine()->getManager()->persist($user);
             $this->getDoctrine()->getManager()->flush();
 
+            $this->sendRegisterLetter($user);
+
             return $this->redirectToRoute($this->getParameter('youshido_security_user.redirects.register_success'));
         }
 
@@ -210,6 +214,55 @@ class SecurityController extends Controller
             'form' => $form->createView(),
             'type' => $type
         ]);
+    }
+
+    /**
+     * @Route("/security/ajax/register", name="security.ajax.register")
+     */
+    public function checkAjaxRegisterAction(Request $request)
+    {
+        $result = ['success' => false];
+
+        if($request->isXmlHttpRequest() && $request->getMethod() == 'POST'){
+            /** @var SecuredUser $user */
+            $modelClass = $this->getParameter('youshido_security_user.model');
+            $user = new $modelClass;
+
+            $typeClass = $this->getParameter('youshido_security_user.form.registration');
+            $type = new $typeClass;
+
+            $form = $this->createForm($type, $user, array(
+                'action' => $this->generateUrl('security.register'),
+            ));
+
+            $form->handleRequest($request);
+
+            if ($form->isValid()) {
+                $encoded = $this->generatePassword($user, $user->getPassword());
+
+                $user->setPassword($encoded);
+
+                $this->getDoctrine()->getManager()->persist($user);
+                $this->getDoctrine()->getManager()->flush();
+
+                $this->sendRegisterLetter($user);
+
+                $result['success'] = true;
+            }else{
+                foreach($form->getErrors(true, true) as $error){
+                    /** @var ConstraintViolation $cause */
+                    $cause = $error->getCause();
+                    $result['errors'][$cause->getPropertyPath()] = $error->getMessage();
+                }
+            }
+        }
+
+        return new JsonResponse($result);
+    }
+
+    public function sendRegisterLetter(SecuredUser $user)
+    {
+        //todo:
     }
 
 }
