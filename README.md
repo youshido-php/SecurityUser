@@ -116,6 +116,7 @@ youshido_security_user:
     templates:
         login_form: @YoushidoSecurityUser/Security/login.html.twig
         register_form: @YoushidoSecurityUser/Security/register.html.twig
+        activation_success: @YoushidoSecurityUser/Security/activation_success.html.twig
         
         recovery_form: @YoushidoSecurityUser/Security/recovery.html.twig
         recovery_success: @YoushidoSecurityUser/Security/recovery_success.html.twig
@@ -123,8 +124,19 @@ youshido_security_user:
         change_password_success: @YoushidoSecurityUser/Security/change_password_success.html.twig
         change_password_error: @YoushidoSecurityUser/Security/recovery_error.html.twig
         change_password_form: @YoushidoSecurityUser/Security/change_password.html.twig
+        
+        register_letter: @YoushidoSecurityUser/Letters/register_letter.html.twig
+        recovery_letter: @YoushidoSecurityUser/Letters/recovery_letter.html.twig
     redirects:
         register_success: homepage
+    mailer:
+        from: from@test.com
+        subject:
+            recovery: Recovery letter
+            register: Register letter
     form:
         registration: AppBundle\Form\Type\UserType
+    send_mails:
+        register: true
+        recovery: true
 ```

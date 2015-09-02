@@ -12,6 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Validator\ConstraintViolation;
 use Youshido\SecurityUserBundle\Entity\SecuredUser;
 use Youshido\SecurityUserBundle\Form\Type\ChangePasswordType;
@@ -81,9 +82,8 @@ class SecurityController extends Controller
                 ->findByEmail($email);
 
             if ($user && method_exists($user, 'getApproved') && $user->getApproved()) {
-                $recoveryUrl = $this->generateRecoveryUrl($user);
 
-                //todo: send recovery email
+                $this->sendRegisterLetter($user, 'recovery');
 
                 return $this->render($this->getParameter('youshido_security_user.templates.recovery_success'));
             } else {
@@ -94,20 +94,6 @@ class SecurityController extends Controller
         return $this->render($this->getParameter('youshido_security_user.templates.recovery_form'), [
             'form' => $form->createView(),
             'error' => $error
-        ]);
-    }
-
-    /**
-     * @param $user SecuredUser
-     * @return string
-     */
-    private function generateRecoveryUrl($user)
-    {
-        $field = $user->getPassword();
-
-        return $this->generateUrl('security.recovery_redirect', [
-            'id' => $user->getId(),
-            'secret' => $this->generateSecret($field)
         ]);
     }
 
@@ -200,12 +186,14 @@ class SecurityController extends Controller
         if ($form->isValid()) {
             $encoded = $this->generatePassword($user, $user->getPassword());
 
-            $user->setPassword($encoded);
+            $user
+                ->setPassword($encoded)
+                ->setActive(!$this->getParameter('youshido_security_user.send_mails.register'));
 
             $this->getDoctrine()->getManager()->persist($user);
             $this->getDoctrine()->getManager()->flush();
 
-            $this->sendRegisterLetter($user);
+            $this->sendRegisterLetter($user, 'register');
 
             return $this->redirectToRoute($this->getParameter('youshido_security_user.redirects.register_success'));
         }
@@ -231,21 +219,20 @@ class SecurityController extends Controller
             $typeClass = $this->getParameter('youshido_security_user.form.registration');
             $type = new $typeClass;
 
-            $form = $this->createForm($type, $user, array(
-                'action' => $this->generateUrl('security.register'),
-            ));
-
+            $form = $this->createForm($type, $user);
             $form->handleRequest($request);
 
             if ($form->isValid()) {
                 $encoded = $this->generatePassword($user, $user->getPassword());
 
-                $user->setPassword($encoded);
+                $user
+                    ->setPassword($encoded)
+                    ->setActive(!$this->getParameter('youshido_security_user.send_mails.register'));
 
                 $this->getDoctrine()->getManager()->persist($user);
                 $this->getDoctrine()->getManager()->flush();
 
-                $this->sendRegisterLetter($user);
+                $this->sendRegisterLetter($user, 'register');
 
                 $result['success'] = true;
             }else{
@@ -260,9 +247,74 @@ class SecurityController extends Controller
         return new JsonResponse($result);
     }
 
-    public function sendRegisterLetter(SecuredUser $user)
+    /**
+     * @Route("/activate-user/{id}/{secret}", name="security.user.activate")
+     */
+    public function activeUserAction($id, $secret)
     {
-        //todo:
+        /** @var SecuredUser $user */
+        $user = $this->get('doctrine')
+            ->getRepository($this->getParameter('youshido_security_user.model'))
+            ->find($id);
+
+        if(!$user){
+            throw $this->createNotFoundException();
+        }
+
+        if($this->generateSecret($user->getPassword()) == $secret){
+            $user->setActive(true);
+
+            $this->getDoctrine()->getManager()->persist($user);
+            $this->getDoctrine()->getManager()->flush();
+
+            return $this->render($this->getParameter('youshido_security_user.templates.activation_success'), [
+                'user' => $user
+            ]);
+        }
+
+        throw $this->createNotFoundException();
+    }
+
+    public function sendRegisterLetter(SecuredUser $user, $action)
+    {
+        if($this->getParameter('youshido_security_user.send_mails.'.$action)){
+            switch($action){
+                case 'register':
+                    $url = $this->generateUrl('security.user.activate', [
+                        'id'     => $user->getId(),
+                        'secret' => $this->generateSecret($user->getPassword())
+                    ], UrlGeneratorInterface::ABSOLUTE_URL);
+                    break;
+
+                case 'recovery':
+                    $url = $this->generateUrl('security.recovery_redirect', [
+                        'id' => $user->getId(),
+                        'secret' => $this->generateSecret($user->getPassword())
+                    ], UrlGeneratorInterface::ABSOLUTE_URL);
+                    break;
+
+                default:
+                    throw new \Exception('Action not found!');
+            }
+
+
+            $message = \Swift_Message::newInstance()
+                ->setSubject($this->getParameter('youshido_security_user.mailer.subjects.'.$action))
+                ->setFrom($this->getParameter('youshido_security_user.mailer.from'))
+                ->setTo($user->getEmail())
+                ->setBody(
+                    $this->renderView(
+                        $this->getParameter('youshido_security_user.templates.' . $action . '_letter'),
+                        [
+                            'user' => $user,
+                            'url' => $url
+                        ]
+                    ),
+                    'text/html'
+                );
+
+            $this->get('mailer')->send($message);
+        }
     }
 
 }
