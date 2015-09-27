@@ -8,11 +8,13 @@ use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
- * User
+ * Class SecuredUser
  *
  * @ORM\HasLifecycleCallbacks()
  * @ORM\MappedSuperclass(repositoryClass="Youshido\SecurityUserBundle\Entity\Repository\SecuredUserRepository")
  * @UniqueEntity("email")
+ * @property mixed $id
+ * @method integer getId()
  */
 class SecuredUser implements \Serializable, AdvancedUserInterface
 {
@@ -68,17 +70,6 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
      */
     private $updatedAt;
 
-
-    /**
-     * Get id
-     *
-     * @return integer 
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
-
     /**
      * Set firstName
      *
@@ -100,6 +91,11 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
     public function getFirstName()
     {
         return $this->firstName;
+    }
+
+    public function getFullName()
+    {
+        return $this->firstName . ($this->lastName && $this->firstName ? ' ' : '') . $this->lastName;
     }
 
     /**
