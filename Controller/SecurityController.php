@@ -193,7 +193,9 @@ class SecurityController extends Controller
             $this->getDoctrine()->getManager()->persist($user);
             $this->getDoctrine()->getManager()->flush();
 
-            $this->sendRegisterLetter($user, 'register');
+            if($this->getParameter('youshido_security_user.send_mails.register')){
+                $this->sendRegisterLetter($user, 'register');
+            }
 
             return $this->redirectToRoute($this->getParameter('youshido_security_user.redirects.register_success'));
         }
@@ -232,7 +234,9 @@ class SecurityController extends Controller
                 $this->getDoctrine()->getManager()->persist($user);
                 $this->getDoctrine()->getManager()->flush();
 
-                $this->sendRegisterLetter($user, 'register');
+                if($this->getParameter('youshido_security_user.send_mails.register')){
+                    $this->sendRegisterLetter($user, 'register');
+                }
 
                 $result['success'] = true;
             }else{
@@ -263,6 +267,7 @@ class SecurityController extends Controller
 
         if($this->generateSecret($user->getPassword()) == $secret){
             $user->setActive(true);
+            $user->setActivatedAt(new \DateTime());
 
             $this->getDoctrine()->getManager()->persist($user);
             $this->getDoctrine()->getManager()->flush();

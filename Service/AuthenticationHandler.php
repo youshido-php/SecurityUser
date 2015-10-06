@@ -8,6 +8,7 @@
 namespace Youshido\SecurityUserBundle\Service;
 
 
+use Symfony\Component\DependencyInjection\ContainerAware;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,12 +16,11 @@ use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Routing\RouterInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
-use Symfony\Component\Security\Core\Role\RoleInterface;
 use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Http\Authentication\AuthenticationFailureHandlerInterface;
 use Symfony\Component\Security\Http\Authentication\AuthenticationSuccessHandlerInterface;
 
-class AuthenticationHandler implements AuthenticationSuccessHandlerInterface, AuthenticationFailureHandlerInterface
+class AuthenticationHandler extends ContainerAware implements AuthenticationSuccessHandlerInterface, AuthenticationFailureHandlerInterface
 {
 
     /** @var RouterInterface */
@@ -42,7 +42,11 @@ class AuthenticationHandler implements AuthenticationSuccessHandlerInterface, Au
     {
         if ($request->isXmlHttpRequest()) {
 
-            $array = array('success' => false, 'message' => $exception->getMessage()); // data to return via JSON
+            $array = array( // data to return via JSON
+                'success'      => false,
+                'message'      => $exception->getMessage(),
+                'redirect_url' => $this->generateRedirectUrl($request, 'on_failure')
+            );
             $response = new Response(json_encode($array));
             $response->headers->set('Content-Type', 'application/json');
 
@@ -59,15 +63,10 @@ class AuthenticationHandler implements AuthenticationSuccessHandlerInterface, Au
      */
     public function onAuthenticationSuccess(Request $request, TokenInterface $token)
     {
-        $roles = array_map(function ($role) {
-            /** @var $role RoleInterface */
-            return $role->getRole();
-        }, $token->getRoles());
-
         if ($request->isXmlHttpRequest()) {
             $array = [
                 'success' => true,
-                'redirect_url' => $this->generateAfterSuccessRedirectUrl($roles, $request)
+                'redirect_url' => $this->generateRedirectUrl($request)
             ] ;
 
             $response = new Response(json_encode($array));
@@ -75,12 +74,17 @@ class AuthenticationHandler implements AuthenticationSuccessHandlerInterface, Au
 
             return $response;
         } else {
-            return new RedirectResponse($this->generateAfterSuccessRedirectUrl($roles, $request));
+            return new RedirectResponse($this->generateRedirectUrl($request));
         }
     }
 
-    private function generateAfterSuccessRedirectUrl($roles, Request $request)
+    private function generateRedirectUrl(Request $request, $key = 'on_success')
     {
-        return $this->router->generate('homepage');
+        $referer = $request->get('referer');
+        if($this->container->getParameter('youshido_security_user.redirects.user_referer') && $referer){
+            return $referer;
+        }
+
+        return $this->router->generate($this->container->getParameter('youshido_security_user.redirects.'.$key));
     }
 }

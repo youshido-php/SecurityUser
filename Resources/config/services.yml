@@ -3,3 +3,5 @@ services:
         class: Youshido\SecurityUserBundle\Service\AuthenticationHandler
         public: false
         arguments: [@router, @session]
+        calls:
+            - [ setContainer, [ @service_container ]]

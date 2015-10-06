@@ -47,7 +47,14 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
      *
      * @ORM\Column(name="active", type="boolean")
      */
-    private $active = true;
+    private $active = false;
+
+    /**
+     * @var boolean
+     *
+     * @ORM\Column(name="enable", type="boolean")
+     */
+    private $enable = true;
 
     /**
      * @var string
@@ -62,6 +69,13 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
      * @ORM\Column(name="createdAt", type="datetime")
      */
     private $createdAt;
+
+    /**
+     * @var \DateTime
+     *
+     * @ORM\Column(name="activatedAt", type="datetime")
+     */
+    private $activatedAt;
 
     /**
      * @var \DateTime
@@ -282,7 +296,7 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
      */
     public function isEnabled()
     {
-        return $this->getActive() === true;
+        return $this->getActive() && $this->getEnabled();
     }
 
     /**
@@ -339,5 +353,40 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
     public function eraseCredentials()
     {
 
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getActivatedAt()
+    {
+        return $this->activatedAt;
+    }
+
+    /**
+     * @param \DateTime $activatedAt
+     * @return SecuredUser
+     */
+    public function setActivatedAt($activatedAt)
+    {
+        $this->activatedAt = $activatedAt;
+
+        return $this;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isEnable()
+    {
+        return $this->enable;
+    }
+
+    /**
+     * @param boolean $enable
+     */
+    public function setEnable($enable)
+    {
+        $this->enable = $enable;
     }
 }
