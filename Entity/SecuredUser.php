@@ -73,7 +73,7 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
     /**
      * @var \DateTime
      *
-     * @ORM\Column(name="activatedAt", type="datetime")
+     * @ORM\Column(name="activatedAt", type="datetime", nullable=true)
      */
     private $activatedAt;
 
