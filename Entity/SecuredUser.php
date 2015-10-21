@@ -296,7 +296,7 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
      */
     public function isEnabled()
     {
-        return $this->getActive() && $this->getEnabled();
+        return $this->getActive() && $this->isEnable();
     }
 
     /**
