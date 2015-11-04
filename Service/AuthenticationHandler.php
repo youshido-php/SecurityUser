@@ -34,7 +34,6 @@ class AuthenticationHandler extends ContainerAware implements AuthenticationSucc
         $this->session = $session;
     }
 
-
     /**
      * @inheritdoc
      */

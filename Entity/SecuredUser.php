@@ -21,21 +21,18 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
 
     /**
      * @var string
-     *
-     * @ORM\Column(name="firstName", type="string", length=255, nullable=true)
+     * @ORM\Column(name="first_name", type="string", length=255, nullable=true)
      */
     private $firstName;
 
     /**
      * @var string
-     *
-     * @ORM\Column(name="lastName", type="string", length=255, nullable=true)
+     * @ORM\Column(name="last_name", type="string", length=255, nullable=true)
      */
     private $lastName;
 
     /**
      * @var string
-     *
      * @ORM\Column(name="email", type="string", length=255)
      *
      * @Assert\Email()
@@ -44,42 +41,39 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
 
     /**
      * @var boolean
-     *
      * @ORM\Column(name="active", type="boolean")
      */
     private $active = false;
 
     /**
      * @var boolean
-     *
      * @ORM\Column(name="enable", type="boolean")
      */
     private $enable = true;
 
     /**
      * @var string
-     *
-     * @ORM\Column(name="password", type="string", length=255)
+     * @ORM\Column(name="password", type="string", length=255, nullable = true)
      */
     private $password;
 
+    /** @ORM\Column(name="activation_code", type="string", nullable=true) */
+    private $activationCode;
+
     /**
      * @var \DateTime
-     *
      * @ORM\Column(name="createdAt", type="datetime")
      */
     private $createdAt;
 
     /**
      * @var \DateTime
-     *
      * @ORM\Column(name="activatedAt", type="datetime", nullable=true)
      */
     private $activatedAt;
 
     /**
      * @var \DateTime
-     *
      * @ORM\Column(name="updatedAt", type="datetime")
      */
     private $updatedAt;
@@ -389,4 +383,24 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
     {
         $this->enable = $enable;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getActivationCode()
+    {
+        return $this->activationCode;
+    }
+
+    /**
+     * @param mixed $activationCode
+     * @return SecuredUser
+     */
+    public function setActivationCode($activationCode)
+    {
+        $this->activationCode = $activationCode;
+
+        return $this;
+    }
+
 }
