@@ -21,62 +21,84 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
 
     /**
      * @var string
+     *
      * @ORM\Column(name="first_name", type="string", length=255, nullable=true)
      */
     private $firstName;
 
     /**
      * @var string
+     *
      * @ORM\Column(name="last_name", type="string", length=255, nullable=true)
      */
     private $lastName;
 
     /**
      * @var string
-     * @ORM\Column(name="email", type="string", length=255)
      *
      * @Assert\Email()
+     * @ORM\Column(name="email", type="string", length=255)
      */
     private $email;
 
     /**
      * @var boolean
+     *
      * @ORM\Column(name="active", type="boolean")
      */
     private $active = false;
 
     /**
      * @var boolean
+     *
      * @ORM\Column(name="enable", type="boolean")
      */
     private $enable = true;
 
     /**
      * @var string
+     *
      * @ORM\Column(name="password", type="string", length=255, nullable = true)
      */
     private $password;
 
-    /** @ORM\Column(name="activation_code", type="string", nullable=true) */
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="activation_code", type="string", nullable=true)
+     */
     private $activationCode;
 
     /**
      * @var \DateTime
-     * @ORM\Column(name="createdAt", type="datetime")
+     *
+     * @ORM\Column(name="created_at", type="datetime")
      */
     private $createdAt;
 
     /**
      * @var \DateTime
-     * @ORM\Column(name="activatedAt", type="datetime", nullable=true)
+     *
+     * @ORM\Column(name="activated_at", type="datetime", nullable=true)
      */
     private $activatedAt;
 
     /**
      * @var \DateTime
-     * @ORM\Column(name="updatedAt", type="datetime")
+     *
+     * @ORM\Column(name="updated_at", type="datetime")
      */
     private $updatedAt;
+
+    /**
+     * Get firstName
+     *
+     * @return string
+     */
+    public function getFirstName()
+    {
+        return $this->firstName;
+    }
 
     /**
      * Set firstName
@@ -91,19 +113,19 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
         return $this;
     }
 
-    /**
-     * Get firstName
-     *
-     * @return string 
-     */
-    public function getFirstName()
-    {
-        return $this->firstName;
-    }
-
     public function getFullName()
     {
         return $this->firstName . ($this->lastName && $this->firstName ? ' ' : '') . $this->lastName;
+    }
+
+    /**
+     * Get lastName
+     *
+     * @return string
+     */
+    public function getLastName()
+    {
+        return $this->lastName;
     }
 
     /**
@@ -120,59 +142,13 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
     }
 
     /**
-     * Get lastName
+     * Get password
      *
-     * @return string 
+     * @return string
      */
-    public function getLastName()
+    public function getPassword()
     {
-        return $this->lastName;
-    }
-
-    /**
-     * Set email
-     *
-     * @param string $email
-     * @return SecuredUser
-     */
-    public function setEmail($email)
-    {
-        $this->email = $email;
-
-        return $this;
-    }
-
-    /**
-     * Get email
-     *
-     * @return string 
-     */
-    public function getEmail()
-    {
-        return $this->email;
-    }
-
-    /**
-     * Set active
-     *
-     * @param boolean $active
-     * @return SecuredUser
-     */
-    public function setActive($active)
-    {
-        $this->active = $active;
-
-        return $this;
-    }
-
-    /**
-     * Get active
-     *
-     * @return boolean 
-     */
-    public function getActive()
-    {
-        return $this->active;
+        return $this->password;
     }
 
     /**
@@ -189,13 +165,13 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
     }
 
     /**
-     * Get password
+     * Get createdAt
      *
-     * @return string 
+     * @return \DateTime
      */
-    public function getPassword()
+    public function getCreatedAt()
     {
-        return $this->password;
+        return $this->createdAt;
     }
 
     /**
@@ -212,13 +188,13 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
     }
 
     /**
-     * Get createdAt
+     * Get updatedAt
      *
-     * @return \DateTime 
+     * @return \DateTime
      */
-    public function getCreatedAt()
+    public function getUpdatedAt()
     {
-        return $this->createdAt;
+        return $this->updatedAt;
     }
 
     /**
@@ -232,16 +208,6 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
         $this->updatedAt = $updatedAt;
 
         return $this;
-    }
-
-    /**
-     * Get updatedAt
-     *
-     * @return \DateTime 
-     */
-    public function getUpdatedAt()
-    {
-        return $this->updatedAt;
     }
 
     /**
@@ -294,6 +260,45 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
     }
 
     /**
+     * Get active
+     *
+     * @return boolean
+     */
+    public function getActive()
+    {
+        return $this->active;
+    }
+
+    /**
+     * Set active
+     *
+     * @param boolean $active
+     * @return SecuredUser
+     */
+    public function setActive($active)
+    {
+        $this->active = $active;
+
+        return $this;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isEnable()
+    {
+        return $this->enable;
+    }
+
+    /**
+     * @param boolean $enable
+     */
+    public function setEnable($enable)
+    {
+        $this->enable = $enable;
+    }
+
+    /**
      * @inheritdoc
      */
     public function serialize()
@@ -342,6 +347,29 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
     }
 
     /**
+     * Get email
+     *
+     * @return string
+     */
+    public function getEmail()
+    {
+        return $this->email;
+    }
+
+    /**
+     * Set email
+     *
+     * @param string $email
+     * @return SecuredUser
+     */
+    public function setEmail($email)
+    {
+        $this->email = $email;
+
+        return $this;
+    }
+
+    /**
      * @inheritdoc
      */
     public function eraseCredentials()
@@ -366,22 +394,6 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
         $this->activatedAt = $activatedAt;
 
         return $this;
-    }
-
-    /**
-     * @return boolean
-     */
-    public function isEnable()
-    {
-        return $this->enable;
-    }
-
-    /**
-     * @param boolean $enable
-     */
-    public function setEnable($enable)
-    {
-        $this->enable = $enable;
     }
 
     /**

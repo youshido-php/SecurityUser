@@ -30,15 +30,15 @@ class SecurityController extends Controller
     {
         $authenticationUtils = $this->get('security.authentication_utils');
 
-        $error = $authenticationUtils->getLastAuthenticationError();
+        $error        = $authenticationUtils->getLastAuthenticationError();
         $lastUsername = $authenticationUtils->getLastUsername();
 
         return $this->render(
             $this->getParameter('youshido_security_user.templates.login_form'),
-            array(
+            [
                 'last_username' => $lastUsername,
-                'error' => $error,
-            )
+                'error'         => $error,
+            ]
         );
     }
 
@@ -75,7 +75,7 @@ class SecurityController extends Controller
 
         $error = '';
         if ($form->isValid()) {
-            $data = $form->getData();
+            $data  = $form->getData();
             $email = $data['email'];
 
             $user = $this->getDoctrine()->getRepository('YoushidoSecurityUserBundle:SecuredUser')
@@ -83,7 +83,7 @@ class SecurityController extends Controller
 
             if ($user && method_exists($user, 'getApproved') && $user->getApproved()) {
 
-                $this->sendRegisterLetter($user, 'recovery');
+                $this->sendLetter($user, 'recovery');
 
                 return $this->render($this->getParameter('youshido_security_user.templates.recovery_success'));
             } else {
@@ -92,9 +92,51 @@ class SecurityController extends Controller
         }
 
         return $this->render($this->getParameter('youshido_security_user.templates.recovery_form'), [
-            'form' => $form->createView(),
+            'form'  => $form->createView(),
             'error' => $error
         ]);
+    }
+
+    public function sendLetter(SecuredUser $user, $action)
+    {
+        if ($this->getParameter('youshido_security_user.send_mails.' . $action)) {
+            switch ($action) {
+                case 'register':
+                    $url = $this->generateUrl('security.user.activate', [
+                        'id'     => $user->getId(),
+                        'secret' => $this->generateSecret($user->getPassword())
+                    ], UrlGeneratorInterface::ABSOLUTE_URL);
+                    break;
+
+                case 'recovery':
+                    $url = $this->generateUrl('security.recovery_redirect', [
+                        'id'     => $user->getId(),
+                        'secret' => $this->generateSecret($user->getPassword())
+                    ], UrlGeneratorInterface::ABSOLUTE_URL);
+                    break;
+
+                default:
+                    throw new \Exception('Action not found!');
+            }
+
+
+            $message = \Swift_Message::newInstance()
+                ->setSubject($this->getParameter('youshido_security_user.mailer.subjects.' . $action))
+                ->setFrom($this->getParameter('youshido_security_user.mailer.from'))
+                ->setTo($user->getEmail())
+                ->setBody(
+                    $this->renderView(
+                        $this->getParameter('youshido_security_user.templates.' . $action . '_letter'),
+                        [
+                            'user' => $user,
+                            'url'  => $url
+                        ]
+                    ),
+                    'text/html'
+                );
+
+            $this->get('mailer')->send($message);
+        }
     }
 
     private function generateSecret($field)
@@ -108,13 +150,16 @@ class SecurityController extends Controller
      * @Route("/recovery/{id}/{secret}", name="security.recovery_redirect")
      *
      * @param Request $request
-     * @param $id
-     * @param $secret
+     * @param         $id
+     * @param         $secret
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function recoveryRedirectAction(Request $request, $id, $secret)
     {
-        $user = $this->getDoctrine()->getRepository('YoushidoSecurityUserBundle:SecuredUser')
+        $modelClass = $this->getParameter('youshido_security_user.model');
+
+        /** @var SecuredUser $user */
+        $user = $this->getDoctrine()->getRepository($modelClass)
             ->find($id);
 
         if ($user) {
@@ -128,7 +173,7 @@ class SecurityController extends Controller
                 $form->handleRequest($request);
 
                 if ($form->isValid()) {
-                    $data = $form->getData();
+                    $data     = $form->getData();
                     $password = $data['password'];
 
                     $encoded = $this->generatePassword($user, $password);
@@ -172,14 +217,14 @@ class SecurityController extends Controller
     {
         /** @var SecuredUser $user */
         $modelClass = $this->getParameter('youshido_security_user.model');
-        $user = new $modelClass;
+        $user       = new $modelClass;
 
         $typeClass = $this->getParameter('youshido_security_user.form.registration');
-        $type = new $typeClass;
+        $type      = new $typeClass;
 
-        $form = $this->createForm($type, $user, array(
+        $form = $this->createForm($type, $user, [
             'action' => $this->generateUrl('security.register'),
-        ));
+        ]);
 
         $form->handleRequest($request);
 
@@ -193,8 +238,8 @@ class SecurityController extends Controller
             $this->getDoctrine()->getManager()->persist($user);
             $this->getDoctrine()->getManager()->flush();
 
-            if($this->getParameter('youshido_security_user.send_mails.register')){
-                $this->sendRegisterLetter($user, 'register');
+            if ($this->getParameter('youshido_security_user.send_mails.register')) {
+                $this->sendLetter($user, 'register');
             }
 
             return $this->redirectToRoute($this->getParameter('youshido_security_user.redirects.register_success'));
@@ -213,13 +258,13 @@ class SecurityController extends Controller
     {
         $result = ['success' => false];
 
-        if($request->isXmlHttpRequest() && $request->getMethod() == 'POST'){
+        if ($request->isXmlHttpRequest() && $request->getMethod() == 'POST') {
             /** @var SecuredUser $user */
             $modelClass = $this->getParameter('youshido_security_user.model');
-            $user = new $modelClass;
+            $user       = new $modelClass;
 
             $typeClass = $this->getParameter('youshido_security_user.form.registration');
-            $type = new $typeClass;
+            $type      = new $typeClass;
 
             $form = $this->createForm($type, $user);
             $form->handleRequest($request);
@@ -234,15 +279,15 @@ class SecurityController extends Controller
                 $this->getDoctrine()->getManager()->persist($user);
                 $this->getDoctrine()->getManager()->flush();
 
-                if($this->getParameter('youshido_security_user.send_mails.register')){
-                    $this->sendRegisterLetter($user, 'register');
+                if ($this->getParameter('youshido_security_user.send_mails.register')) {
+                    $this->sendLetter($user, 'register');
                 }
 
                 $result['success'] = true;
-            }else{
-                foreach($form->getErrors(true, true) as $error){
+            } else {
+                foreach ($form->getErrors(true, true) as $error) {
                     /** @var ConstraintViolation $cause */
-                    $cause = $error->getCause();
+                    $cause                                       = $error->getCause();
                     $result['errors'][$cause->getPropertyPath()] = $error->getMessage();
                 }
             }
@@ -261,11 +306,11 @@ class SecurityController extends Controller
             ->getRepository($this->getParameter('youshido_security_user.model'))
             ->find($id);
 
-        if(!$user){
+        if (!$user) {
             throw $this->createNotFoundException();
         }
 
-        if($this->generateSecret($user->getPassword()) == $secret){
+        if ($this->generateSecret($user->getPassword()) == $secret) {
             $user->setActive(true);
             $user->setActivatedAt(new \DateTime());
 
@@ -278,48 +323,6 @@ class SecurityController extends Controller
         }
 
         throw $this->createNotFoundException();
-    }
-
-    public function sendRegisterLetter(SecuredUser $user, $action)
-    {
-        if($this->getParameter('youshido_security_user.send_mails.'.$action)){
-            switch($action){
-                case 'register':
-                    $url = $this->generateUrl('security.user.activate', [
-                        'id'     => $user->getId(),
-                        'secret' => $this->generateSecret($user->getPassword())
-                    ], UrlGeneratorInterface::ABSOLUTE_URL);
-                    break;
-
-                case 'recovery':
-                    $url = $this->generateUrl('security.recovery_redirect', [
-                        'id' => $user->getId(),
-                        'secret' => $this->generateSecret($user->getPassword())
-                    ], UrlGeneratorInterface::ABSOLUTE_URL);
-                    break;
-
-                default:
-                    throw new \Exception('Action not found!');
-            }
-
-
-            $message = \Swift_Message::newInstance()
-                ->setSubject($this->getParameter('youshido_security_user.mailer.subjects.'.$action))
-                ->setFrom($this->getParameter('youshido_security_user.mailer.from'))
-                ->setTo($user->getEmail())
-                ->setBody(
-                    $this->renderView(
-                        $this->getParameter('youshido_security_user.templates.' . $action . '_letter'),
-                        [
-                            'user' => $user,
-                            'url' => $url
-                        ]
-                    ),
-                    'text/html'
-                );
-
-            $this->get('mailer')->send($message);
-        }
     }
 
 }
