@@ -49,15 +49,31 @@ class UserProvider extends ContainerAware
         return new $userClass;
     }
 
-    public function activateUser(SecuredUser $user, $withFlush = true)
+    public function activateUser(SecuredUser $user, $withFlush = true, $clearActivationCode = true)
     {
         $user->setActive(true);
         $user->setActivatedAt(new \DateTime());
 
-        if ($withFlush) {
+        if ($clearActivationCode) {
+            $this->clearActivationCode($user, false);
+        }
+
+        $this->flushUser($user, $withFlush);
+    }
+
+    private function flushUser(SecuredUser $user, $confirm = true)
+    {
+        if ($confirm) {
             $this->container->get('doctrine')->getManager()->persist($user);
             $this->container->get('doctrine')->getManager()->flush();
         }
+    }
+
+    public function clearActivationCode(SecuredUser $user, $withFlush = true)
+    {
+        $user->setActivationCode(null);
+
+        $this->flushUser($user, $withFlush);
     }
 
     public function generateUserPassword(SecuredUser &$user, $password = '')
@@ -70,5 +86,12 @@ class UserProvider extends ContainerAware
 
 
         $user->setPassword($encoder->encodePassword($user, $password));
+    }
+
+    public function generateUserActivationCode(SecuredUser &$user, $withFlush = true)
+    {
+        $user->setActivationCode(md5(time().uniqid()));
+
+        $this->flushUser($user, $withFlush);
     }
 }

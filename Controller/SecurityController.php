@@ -81,8 +81,8 @@ class SecurityController extends Controller
             $user = $this->get('security.user_provider')->findUserByEmail($email);
 
             if ($user && method_exists($user, 'getApproved') && $user->getApproved()) {
-
-                $this->sendLetter($user, 'recovery');
+                $this->get('security.user_provider')->generateUserActivationCode($user);
+                $this->get('security.mailer')->sendRecoveryLetter($user);
 
                 return $this->render($this->getParameter('youshido_security_user.templates.recovery_success'));
             } else {
@@ -96,55 +96,6 @@ class SecurityController extends Controller
         ]);
     }
 
-    public function sendLetter(SecuredUser $user, $action)
-    {
-        if ($this->getParameter('youshido_security_user.send_mails.' . $action)) {
-            switch ($action) {
-                case 'register':
-                    $url = $this->generateUrl('security.user.activate', [
-                        'id'     => $user->getId(),
-                        'secret' => $this->generateSecret($user->getPassword())
-                    ], UrlGeneratorInterface::ABSOLUTE_URL);
-                    break;
-
-                case 'recovery':
-                    $url = $this->generateUrl('security.recovery_redirect', [
-                        'id'     => $user->getId(),
-                        'secret' => $this->generateSecret($user->getPassword())
-                    ], UrlGeneratorInterface::ABSOLUTE_URL);
-                    break;
-
-                default:
-                    throw new \Exception('Action not found!');
-            }
-
-
-            $message = \Swift_Message::newInstance()
-                ->setSubject($this->getParameter('youshido_security_user.mailer.subjects.' . $action))
-                ->setFrom($this->getParameter('youshido_security_user.mailer.from'))
-                ->setTo($user->getEmail())
-                ->setBody(
-                    $this->renderView(
-                        $this->getParameter('youshido_security_user.templates.' . $action . '_letter'),
-                        [
-                            'user' => $user,
-                            'url'  => $url
-                        ]
-                    ),
-                    'text/html'
-                );
-
-            $this->get('mailer')->send($message);
-        }
-    }
-
-    private function generateSecret($field)
-    {
-        $secret = $this->getParameter('secret');
-
-        return md5($secret . $field);
-    }
-
     /**
      * @Route("/recovery/{id}/{secret}", name="security.recovery_redirect")
      *
@@ -155,31 +106,26 @@ class SecurityController extends Controller
      */
     public function recoveryRedirectAction(Request $request, $id, $secret)
     {
-        $user = $this->get('security.user_provider')->findUserById($id);
+        $userProvider = $this->get('security.user_provider');
+        $user         = $userProvider->findUserById($id);
 
-        if ($user) {
-            $correctSecret = $this->generateSecret($user->getPassword());
+        if ($user && $secret === $user->getActivationCode()) {
+            $form = $this->createForm(new ChangePasswordType(), null, [
+                'action' => $this->generateUrl('security.recovery_redirect', ['id' => $id, 'secret' => $secret])
+            ]);
 
-            if ($secret === $correctSecret) {
-                $form = $this->createForm(new ChangePasswordType(), null, [
-                    'action' => $this->generateUrl('security.recovery_redirect', ['id' => $id, 'secret' => $secret])
-                ]);
+            $form->handleRequest($request);
 
-                $form->handleRequest($request);
+            if ($form->isValid()) {
+                $userProvider->generateUserPassword($user, $form->getData()['password']);
+                $userProvider->clearActivationCode($user);
 
-                if ($form->isValid()) {
-                    $this->get('security.user_provider')->generateUserPassword($user, $form->getData()['password']);
-
-                    $this->getDoctrine()->getManager()->persist($user);
-                    $this->getDoctrine()->getManager()->flush();
-
-                    return $this->render($this->getParameter('youshido_security_user.templates.change_password_success'));
-                }
-
-                return $this->render($this->getParameter('youshido_security_user.templates.change_password_form'), [
-                    'form' => $form->createView()
-                ]);
+                return $this->render($this->getParameter('youshido_security_user.templates.change_password_success'));
             }
+
+            return $this->render($this->getParameter('youshido_security_user.templates.change_password_form'), [
+                'form' => $form->createView()
+            ]);
         }
 
         return $this->render($this->getParameter('youshido_security_user.templates.change_password_error'));
@@ -223,11 +169,17 @@ class SecurityController extends Controller
         $user
             ->setActive(!$this->getParameter('youshido_security_user.send_mails.register'));
 
-        $this->getDoctrine()->getManager()->persist($user);
-        $this->getDoctrine()->getManager()->flush();
+        $errors = $this->get('validator')->validate($user);
 
-        if ($this->getParameter('youshido_security_user.send_mails.register')) {
-            $this->sendLetter($user, 'register');
+        if (count($errors) == 0) {
+            if ($this->getParameter('youshido_security_user.send_mails.register')) {
+                $this->get('security.user_provider')->generateUserActivationCode($user, false);
+
+                $this->get('security.mailer')->sendRegistrationLetter($user);
+            }
+
+            $this->getDoctrine()->getManager()->persist($user);
+            $this->getDoctrine()->getManager()->flush();
         }
     }
 
@@ -275,7 +227,7 @@ class SecurityController extends Controller
             throw $this->createNotFoundException();
         }
 
-        if ($this->generateSecret($user->getPassword()) == $secret) {
+        if ($user->getActivationCode() == $secret) {
             $userProvider->activateUser($user);
 
             return $this->render($this->getParameter('youshido_security_user.templates.activation_success'), [

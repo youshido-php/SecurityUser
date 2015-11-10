@@ -1,5 +1,10 @@
 services:
 
+    security.mailer:
+        class: Youshido\SecurityUserBundle\Service\Mailer
+        calls:
+            - [ setContainer, [ @service_container ]]
+
     security.user_provider:
         class: Youshido\SecurityUserBundle\Service\UserProvider
         calls:
