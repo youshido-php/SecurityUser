@@ -78,8 +78,7 @@ class SecurityController extends Controller
             $data  = $form->getData();
             $email = $data['email'];
 
-            $user = $this->getDoctrine()->getRepository('YoushidoSecurityUserBundle:SecuredUser')
-                ->findByEmail($email);
+            $user = $this->get('security.user_provider')->findUserByEmail($email);
 
             if ($user && method_exists($user, 'getApproved') && $user->getApproved()) {
 
@@ -156,11 +155,7 @@ class SecurityController extends Controller
      */
     public function recoveryRedirectAction(Request $request, $id, $secret)
     {
-        $modelClass = $this->getParameter('youshido_security_user.model');
-
-        /** @var SecuredUser $user */
-        $user = $this->getDoctrine()->getRepository($modelClass)
-            ->find($id);
+        $user = $this->get('security.user_provider')->findUserById($id);
 
         if ($user) {
             $correctSecret = $this->generateSecret($user->getPassword());
@@ -173,12 +168,7 @@ class SecurityController extends Controller
                 $form->handleRequest($request);
 
                 if ($form->isValid()) {
-                    $data     = $form->getData();
-                    $password = $data['password'];
-
-                    $encoded = $this->generatePassword($user, $password);
-
-                    $user->setPassword($encoded);
+                    $this->get('security.user_provider')->generateUserPassword($user, $form->getData()['password']);
 
                     $this->getDoctrine()->getManager()->persist($user);
                     $this->getDoctrine()->getManager()->flush();
@@ -196,18 +186,6 @@ class SecurityController extends Controller
     }
 
     /**
-     * @param $user
-     * @param $password
-     * @return string
-     */
-    private function generatePassword(SecuredUser $user, $password)
-    {
-        $encoder = $this->container->get('security.password_encoder');
-
-        return $encoder->encodePassword($user, $password);
-    }
-
-    /**
      * @Route("/register", name="security.register")
      *
      * @param Request $request
@@ -215,9 +193,7 @@ class SecurityController extends Controller
      */
     public function registerAction(Request $request)
     {
-        /** @var SecuredUser $user */
-        $modelClass = $this->getParameter('youshido_security_user.model');
-        $user       = new $modelClass;
+        $user = $this->get('security.user_provider')->createNewUserInstance();
 
         $typeClass = $this->getParameter('youshido_security_user.form.registration');
         $type      = new $typeClass;
@@ -229,18 +205,7 @@ class SecurityController extends Controller
         $form->handleRequest($request);
 
         if ($form->isValid()) {
-            $encoded = $this->generatePassword($user, $user->getPassword());
-
-            $user
-                ->setPassword($encoded)
-                ->setActive(!$this->getParameter('youshido_security_user.send_mails.register'));
-
-            $this->getDoctrine()->getManager()->persist($user);
-            $this->getDoctrine()->getManager()->flush();
-
-            if ($this->getParameter('youshido_security_user.send_mails.register')) {
-                $this->sendLetter($user, 'register');
-            }
+            $this->applyRegisterAction($user);
 
             return $this->redirectToRoute($this->getParameter('youshido_security_user.redirects.register_success'));
         }
@@ -251,6 +216,21 @@ class SecurityController extends Controller
         ]);
     }
 
+    private function applyRegisterAction(SecuredUser &$user)
+    {
+        $this->get('security.user_provider')->generateUserPassword($user, $user->getPassword());
+
+        $user
+            ->setActive(!$this->getParameter('youshido_security_user.send_mails.register'));
+
+        $this->getDoctrine()->getManager()->persist($user);
+        $this->getDoctrine()->getManager()->flush();
+
+        if ($this->getParameter('youshido_security_user.send_mails.register')) {
+            $this->sendLetter($user, 'register');
+        }
+    }
+
     /**
      * @Route("/security/ajax/register", name="security.ajax.register")
      */
@@ -259,9 +239,7 @@ class SecurityController extends Controller
         $result = ['success' => false];
 
         if ($request->isXmlHttpRequest() && $request->getMethod() == 'POST') {
-            /** @var SecuredUser $user */
-            $modelClass = $this->getParameter('youshido_security_user.model');
-            $user       = new $modelClass;
+            $user = $this->get('security.user_provider')->createNewUserInstance();
 
             $typeClass = $this->getParameter('youshido_security_user.form.registration');
             $type      = new $typeClass;
@@ -270,18 +248,7 @@ class SecurityController extends Controller
             $form->handleRequest($request);
 
             if ($form->isValid()) {
-                $encoded = $this->generatePassword($user, $user->getPassword());
-
-                $user
-                    ->setPassword($encoded)
-                    ->setActive(!$this->getParameter('youshido_security_user.send_mails.register'));
-
-                $this->getDoctrine()->getManager()->persist($user);
-                $this->getDoctrine()->getManager()->flush();
-
-                if ($this->getParameter('youshido_security_user.send_mails.register')) {
-                    $this->sendLetter($user, 'register');
-                }
+                $this->applyRegisterAction($user);
 
                 $result['success'] = true;
             } else {
@@ -301,21 +268,15 @@ class SecurityController extends Controller
      */
     public function activeUserAction($id, $secret)
     {
-        /** @var SecuredUser $user */
-        $user = $this->get('doctrine')
-            ->getRepository($this->getParameter('youshido_security_user.model'))
-            ->find($id);
+        $userProvider = $this->get('security.user_provider');
+        $user         = $userProvider->findUserById($id);
 
         if (!$user) {
             throw $this->createNotFoundException();
         }
 
         if ($this->generateSecret($user->getPassword()) == $secret) {
-            $user->setActive(true);
-            $user->setActivatedAt(new \DateTime());
-
-            $this->getDoctrine()->getManager()->persist($user);
-            $this->getDoctrine()->getManager()->flush();
+            $userProvider->activateUser($user);
 
             return $this->render($this->getParameter('youshido_security_user.templates.activation_success'), [
                 'user' => $user
