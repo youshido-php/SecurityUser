@@ -80,7 +80,7 @@ class SecurityController extends Controller
 
             $user = $this->get('security.user_provider')->findUserByEmail($email);
 
-            if ($user && method_exists($user, 'getApproved') && $user->getApproved()) {
+            if ($user) {
                 $this->get('security.user_provider')->generateUserActivationCode($user);
                 $this->get('security.mailer')->sendRecoveryLetter($user);
 
