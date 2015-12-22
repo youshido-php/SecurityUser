@@ -24,14 +24,14 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
      *
      * @ORM\Column(name="first_name", type="string", length=255, nullable=true)
      */
-    private $firstName;
+    protected $firstName;
 
     /**
      * @var string
      *
      * @ORM\Column(name="last_name", type="string", length=255, nullable=true)
      */
-    private $lastName;
+    protected $lastName;
 
     /**
      * @var string
@@ -39,56 +39,56 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
      * @Assert\Email()
      * @ORM\Column(name="email", type="string", length=255)
      */
-    private $email;
+    protected $email;
 
     /**
      * @var boolean
      *
      * @ORM\Column(name="active", type="boolean")
      */
-    private $active = false;
+    protected $active = false;
 
     /**
      * @var boolean
      *
      * @ORM\Column(name="enable", type="boolean")
      */
-    private $enable = true;
+    protected $enable = true;
 
     /**
      * @var string
      *
      * @ORM\Column(name="password", type="string", length=255, nullable = true)
      */
-    private $password;
+    protected $password;
 
     /**
      * @var string
      *
      * @ORM\Column(name="activation_code", type="string", nullable=true)
      */
-    private $activationCode;
+    protected $activationCode;
 
     /**
      * @var \DateTime
      *
      * @ORM\Column(name="created_at", type="datetime")
      */
-    private $createdAt;
+    protected $createdAt;
 
     /**
      * @var \DateTime
      *
      * @ORM\Column(name="activated_at", type="datetime", nullable=true)
      */
-    private $activatedAt;
+    protected $activatedAt;
 
     /**
      * @var \DateTime
      *
      * @ORM\Column(name="updated_at", type="datetime")
      */
-    private $updatedAt;
+    protected $updatedAt;
 
     /**
      * Get firstName
