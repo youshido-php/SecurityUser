@@ -29,7 +29,7 @@ class Configuration implements ConfigurationInterface
                     ->children()
                         ->scalarNode('login_form')->cannotBeEmpty()->defaultValue('@YoushidoSecurityUser/Security/login.html.twig')->end()
                         ->scalarNode('register_form')->cannotBeEmpty()->defaultValue('@YoushidoSecurityUser/Security/register.html.twig')->end()
-                        ->scalarNode('activation_success')->cannotBeEmpty()->defaultValue('@YoushidoSecurityUser/Security/register.html.twig')->end()
+                        ->scalarNode('activation_success')->cannotBeEmpty()->defaultValue('@YoushidoSecurityUser/Security/activation_success.html.twig')->end()
 
                         ->scalarNode('recovery_success')->cannotBeEmpty()->defaultValue('@YoushidoSecurityUser/Security/recovery_success.html.twig')->end()
                         ->scalarNode('recovery_form')->cannotBeEmpty()->defaultValue('@YoushidoSecurityUser/Security/recovery.html.twig')->end()
