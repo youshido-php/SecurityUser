@@ -33,8 +33,7 @@ class Mailer extends ContainerAware
                     $url = $this->container->get('router')->generate(
                         'security.user.activate',
                         [
-                            'id'     => $user->getId(),
-                            'secret' => $user->getActivationCode()
+                            'active' => $user->getActivationCode()
                         ],
                         UrlGeneratorInterface::ABSOLUTE_URL
                     );
@@ -45,7 +44,6 @@ class Mailer extends ContainerAware
                     $url = $this->container->get('router')->generate(
                         'security.recovery_redirect',
                         [
-                            'id'     => $user->getId(),
                             'secret' => $user->getActivationCode()
                         ],
                         UrlGeneratorInterface::ABSOLUTE_URL

@@ -173,7 +173,7 @@ class SecurityController extends Controller
 
         if (count($errors) == 0) {
             if ($this->getParameter('youshido_security_user.send_mails.register')) {
-                $this->get('security.user_provider')->generateUserActivationCode($user, false);
+                $this->get('security.user_provider')->generateUserActivationCode($user);
 
                 $this->get('security.mailer')->sendRegistrationLetter($user);
             }
@@ -216,26 +216,22 @@ class SecurityController extends Controller
     }
 
     /**
-     * @Route("/activate-user/{id}/{secret}", name="security.user.activate")
+     * @Route("/activate-user/{activationCode}", name="security.user.activate")
      */
-    public function activeUserAction($id, $secret)
+    public function activeUserAction($activationCode)
     {
         $userProvider = $this->get('security.user_provider');
-        $user         = $userProvider->findUserById($id);
+        $user         = $userProvider->findUserByActivationCode($activationCode);
 
         if (!$user) {
             throw $this->createNotFoundException();
         }
 
-        if ($user->getActivationCode() == $secret) {
-            $userProvider->activateUser($user);
+        $userProvider->activateUser($user);
 
-            return $this->render($this->getParameter('youshido_security_user.templates.activation_success'), [
-                'user' => $user
-            ]);
-        }
-
-        throw $this->createNotFoundException();
+        return $this->render($this->getParameter('youshido_security_user.templates.activation_success'), [
+            'user' => $user
+        ]);
     }
 
 }
