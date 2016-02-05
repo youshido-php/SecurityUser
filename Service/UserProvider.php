@@ -14,6 +14,10 @@ use Youshido\SecurityUserBundle\Entity\SecuredUser;
 class UserProvider extends ContainerAware
 {
 
+    public function getUserClass()
+    {
+        return $this->container->getParameter('youshido_security_user.model');
+    }
     /**
      * @param $id
      * @return SecuredUser
@@ -21,12 +25,17 @@ class UserProvider extends ContainerAware
     public function findUserById($id)
     {
         return $this->container->get('doctrine')->getRepository($this->getUserClass())
-            ->find($id);
+                               ->find($id);
     }
 
-    public function getUserClass()
+    /**
+     * @param $activationCode
+     * @return SecuredUser
+     */
+    public function findUserByActivationCode($activationCode)
     {
-        return $this->container->getParameter('youshido_security_user.model');
+        return $this->container->get('doctrine')->getRepository($this->getUserClass())
+                               ->findOneBy(['activationCode' => $activationCode]);
     }
 
     /**

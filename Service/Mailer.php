@@ -17,12 +17,12 @@ class Mailer extends ContainerAware
 
     public function sendRecoveryLetter(SecuredUser $user)
     {
-        $this->sendLetter($user, 'recovery');
+        return $this->sendLetter($user, 'recovery');
     }
 
     public function sendRegistrationLetter(SecuredUser $user)
     {
-        $this->sendLetter($user, 'register');
+        return $this->sendLetter($user, 'register');
     }
 
     private function sendLetter(SecuredUser $user, $action)
@@ -33,8 +33,7 @@ class Mailer extends ContainerAware
                     $url = $this->container->get('router')->generate(
                         'security.user.activate',
                         [
-                            'id'     => $user->getId(),
-                            'secret' => $user->getActivationCode()
+                            'activationCode' => $user->getActivationCode()
                         ],
                         UrlGeneratorInterface::ABSOLUTE_URL
                     );
@@ -45,8 +44,7 @@ class Mailer extends ContainerAware
                     $url = $this->container->get('router')->generate(
                         'security.recovery_redirect',
                         [
-                            'id'     => $user->getId(),
-                            'secret' => $user->getActivationCode()
+                            'activationCode' => $user->getActivationCode()
                         ],
                         UrlGeneratorInterface::ABSOLUTE_URL
                     );
@@ -68,7 +66,12 @@ class Mailer extends ContainerAware
                 ->setTo($user->getEmail())
                 ->setBody($html, 'text/html');
 
-            $this->container->get('mailer')->send($message);
+            $mailer = $this->container->get('mailer');
+            $result = $mailer->send($message);
+            $transport = $this->container->get('swiftmailer.transport.real');
+            $mailer->getTransport()->getSpool()->flushQueue($transport);
+
+            return $result;
         }
     }
 
