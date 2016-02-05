@@ -225,7 +225,7 @@ class SecurityController extends Controller
             throw $this->createNotFoundException();
         }
 
-//        $userProvider->activateUser($user);
+        $userProvider->activateUser($user);
 
         return $this->render($this->getParameter('youshido_security_user.templates.activation_success'), [
             'user' => $user
