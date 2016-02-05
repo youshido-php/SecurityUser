@@ -13,7 +13,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Validator\ConstraintViolation;
 use Youshido\SecurityUserBundle\Entity\SecuredUser;
 use Youshido\SecurityUserBundle\Form\Type\ChangePasswordType;
 use Youshido\SecurityUserBundle\Form\Type\RecoveryType;
@@ -97,19 +96,18 @@ class SecurityController extends Controller
     }
 
     /**
-     * @Route("/recovery/{id}/{secret}", name="security.recovery_redirect")
+     * @Route("/recovery/{activationCode}", name="security.recovery_redirect")
      *
      * @param Request $request
-     * @param         $id
      * @param         $secret
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function recoveryRedirectAction(Request $request, $id, $secret)
+    public function recoveryRedirectAction(Request $request, $activationCode)
     {
         $userProvider = $this->get('security.user_provider');
-        $user         = $userProvider->findUserById($id);
+        $user         = $userProvider->findUerByActivationCode($activationCode);
 
-        if ($user && $secret === $user->getActivationCode()) {
+        if ($user) {
             $form = $this->createForm(new ChangePasswordType(), null, [
                 'action' => $this->generateUrl('security.recovery_redirect', ['id' => $id, 'secret' => $secret])
             ]);
