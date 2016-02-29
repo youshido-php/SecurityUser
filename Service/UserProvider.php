@@ -8,24 +8,28 @@
 namespace Youshido\SecurityUserBundle\Service;
 
 
-use Symfony\Component\DependencyInjection\ContainerAware;
+use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 use Youshido\SecurityUserBundle\Entity\SecuredUser;
 
-class UserProvider extends ContainerAware
+class UserProvider
 {
+
+    use ContainerAwareTrait;
 
     public function getUserClass()
     {
         return $this->container->getParameter('youshido_security_user.model');
     }
+
     /**
      * @param $id
      * @return SecuredUser
      */
     public function findUserById($id)
     {
-        return $this->container->get('doctrine')->getRepository($this->getUserClass())
-                               ->find($id);
+        return $this->container->get('doctrine')
+            ->getRepository($this->getUserClass())
+            ->find($id);
     }
 
     /**
@@ -34,8 +38,9 @@ class UserProvider extends ContainerAware
      */
     public function findUserByActivationCode($activationCode)
     {
-        return $this->container->get('doctrine')->getRepository($this->getUserClass())
-                               ->findOneBy(['activationCode' => $activationCode]);
+        return $this->container->get('doctrine')
+            ->getRepository($this->getUserClass())
+            ->findOneBy(['activationCode' => $activationCode]);
     }
 
     /**
@@ -44,7 +49,8 @@ class UserProvider extends ContainerAware
      */
     public function findUserByEmail($email)
     {
-        return $this->container->get('doctrine')->getRepository($this->getUserClass())
+        return $this->container->get('doctrine')
+            ->getRepository($this->getUserClass())
             ->findOneBy(['email' => $email]);
     }
 
@@ -99,7 +105,7 @@ class UserProvider extends ContainerAware
 
     public function generateUserActivationCode(SecuredUser &$user, $withFlush = true)
     {
-        $user->setActivationCode(md5(time().uniqid()));
+        $user->setActivationCode(md5(time() . uniqid()));
 
         $this->flushUser($user, $withFlush);
     }

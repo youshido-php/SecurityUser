@@ -8,12 +8,14 @@
 namespace Youshido\SecurityUserBundle\Service;
 
 
-use Symfony\Component\DependencyInjection\ContainerAware;
+use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Youshido\SecurityUserBundle\Entity\SecuredUser;
 
-class Mailer extends ContainerAware
+class Mailer
 {
+
+    use ContainerAwareTrait;
 
     public function sendRecoveryLetter(SecuredUser $user)
     {

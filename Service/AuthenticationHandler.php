@@ -8,7 +8,7 @@
 namespace Youshido\SecurityUserBundle\Service;
 
 
-use Symfony\Component\DependencyInjection\ContainerAware;
+use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,8 +20,10 @@ use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Security\Http\Authentication\AuthenticationFailureHandlerInterface;
 use Symfony\Component\Security\Http\Authentication\AuthenticationSuccessHandlerInterface;
 
-class AuthenticationHandler extends ContainerAware implements AuthenticationSuccessHandlerInterface, AuthenticationFailureHandlerInterface
+class AuthenticationHandler implements AuthenticationSuccessHandlerInterface, AuthenticationFailureHandlerInterface
 {
+
+    use ContainerAwareTrait;
 
     /** @var RouterInterface */
     private $router;
