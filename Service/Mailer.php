@@ -27,7 +27,7 @@ class Mailer
         return $this->sendLetter($user, 'register');
     }
 
-    private function sendLetter(SecuredUser $user, $action)
+    protected function sendLetter(SecuredUser $user, $action)
     {
         if ($this->container->getParameter('youshido_security_user.send_mails.' . $action)) {
             switch ($action) {
@@ -68,13 +68,19 @@ class Mailer
                 ->setTo($user->getEmail())
                 ->setBody($html, 'text/html');
 
-            $mailer = $this->container->get('mailer');
-            $result = $mailer->send($message);
-            $transport = $this->container->get('swiftmailer.transport.real');
-            $mailer->getTransport()->getSpool()->flushQueue($transport);
 
-            return $result;
+            return $this->send($message);
         }
+    }
+
+    protected function send(\Swift_Message $message)
+    {
+        $mailer = $this->container->get('mailer');
+
+        $result = $mailer->send($message);
+        $mailer->getTransport()->getSpool()->flushQueue($this->container->get('swiftmailer.transport.real'));
+
+        return $result;
     }
 
 }

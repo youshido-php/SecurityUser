@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Validator\ConstraintViolation;
 use Youshido\SecurityUserBundle\Entity\SecuredUser;
 use Youshido\SecurityUserBundle\Form\Type\ChangePasswordType;
 use Youshido\SecurityUserBundle\Form\Type\RecoveryType;
@@ -109,7 +110,7 @@ class SecurityController extends Controller
 
         if ($user) {
             $form = $this->createForm(new ChangePasswordType(), null, [
-                'action' => $this->generateUrl('security.recovery_redirect', ['id' => $id, 'secret' => $secret])
+                'action' => $this->generateUrl('security.recovery_redirect', ['activationCode' => $activationCode])
             ]);
 
             $form->handleRequest($request);
