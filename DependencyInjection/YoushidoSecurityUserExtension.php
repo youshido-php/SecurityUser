@@ -27,6 +27,7 @@ class YoushidoSecurityUserExtension extends Extension
         foreach ($configs as $key => $value) {
             $container->setParameter(sprintf('%s.%s', $prefix, $key), $value);
         }
+        $container->setParameter('youshido_security_user.mailer.from', $config['mailer']['from']);
 
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('services.yml');
