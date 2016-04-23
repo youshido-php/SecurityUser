@@ -64,7 +64,7 @@ class Configuration implements ConfigurationInterface
                     ->addDefaultsIfNotSet()
                     ->canBeUnset()
                     ->children()
-                        ->scalarNode('registration')->cannotBeEmpty()->defaultValue('Youshido\SecurityUserBundle\Form\Type\SecuredUserType')->end()
+                        ->variableNode('registration')->cannotBeEmpty()->defaultValue('Youshido\SecurityUserBundle\Form\Type\SecuredUserType')->end()
                     ->end()
                 ->end()
                 ->arrayNode('mailer')
