@@ -317,7 +317,7 @@ class SecuredUser implements \Serializable, AdvancedUserInterface
     {
         list (
             $this->id,
-            $this->username,
+            $this->email,
             $this->password,
             ) = unserialize($serialized);
     }
