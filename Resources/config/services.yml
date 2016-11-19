@@ -3,16 +3,16 @@ services:
     security.mailer:
         class: Youshido\SecurityUserBundle\Service\Mailer
         calls:
-            - [ setContainer, [ @service_container ]]
+            - [ setContainer, [ "@service_container" ]]
 
     security.user_provider:
         class: Youshido\SecurityUserBundle\Service\UserProvider
         calls:
-            - [ setContainer, [ @service_container ]]
+            - [ setContainer, [ "@service_container" ]]
 
     security.authentication_handler:
         class: Youshido\SecurityUserBundle\Service\AuthenticationHandler
         public: false
-        arguments: [@router, @session]
+        arguments: ["@router", "@session"]
         calls:
-            - [ setContainer, [ @service_container ]]
+            - [ setContainer, [ "@service_container" ]]
